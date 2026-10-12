@@ -1,0 +1,109 @@
+{
+  "project": {
+    "name": "CVaR-Constrained Optimization for Risk-Aware Dynamic Resource Allocation in 5G RAN Slicing",
+    "dataset": "5G-SliciNdd",
+    "dataset_source": "Figshare",
+    "dataset_files": [
+      "eMBB.csv",
+      "URLLC.csv",
+      "mMTC.csv",
+      "Global.csv"
+    ],
+    "processed_dataset_directory": "dataset/processed"
+  },
+  "environment": {
+    "name": "RANSlicingEnvironment",
+    "number_of_slices": 3,
+    "state_dimension": 8,
+    "action_dimension": 3,
+    "action_type": "Allocation proportions",
+    "action_constraint": "Allocations sum to 1",
+    "episode_length": 200,
+    "cvar_threshold": 18.0
+  },
+  "evaluation": {
+    "number_of_episodes": 10,
+    "steps_per_episode": 200,
+    "cvar_confidence": 0.95,
+    "cvar_calculation": {
+      "method": "Empirical upper-tail CVaR",
+      "var": "95th percentile of episode delay observations",
+      "cvar": "Mean of delay observations greater than or equal to VaR",
+      "note": "Ties at VaR may cause more than 5% of observations to be included."
+    },
+    "constraint_satisfaction_rule": "Episode CVaR95 <= 18.0",
+    "evaluation_policy": "Deterministic action selection for learned policies",
+    "evaluation_seeds": {
+      "round_robin": {
+        "values": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109],
+        "status": "Confirmed from evaluation script"
+      },
+      "ppo": {
+        "values": null,
+        "status": "Verify in src/evaluate_ppo.py"
+      },
+      "cvar_ppo": {
+        "values": null,
+        "status": "Verify in src/evaluate_cvar_ppo.py"
+      }
+    }
+  },
+  "methods": {
+    "Round Robin": {
+      "action": [0.333333, 0.333333, 0.333333],
+      "checkpoint": null,
+      "training_required": false
+    },
+    "PPO": {
+      "algorithm": "Proximal Policy Optimization",
+      "checkpoint": "models/ppo_initial_test.pth",
+      "action_selection": "Distribution mean",
+      "training_episodes": null,
+      "hyperparameters": null,
+      "note": "Fill training settings from the actual PPO training script."
+    },
+    "CVaR-PPO": {
+      "algorithm": "CVaR-constrained Proximal Policy Optimization",
+      "checkpoint": "models/cvar_ppo_initial_test.pth",
+      "action_selection": "Dirichlet distribution mean",
+      "training_episodes": null,
+      "cvar_alpha": 0.05,
+      "cvar_threshold": 18.0,
+      "hyperparameters": null,
+      "note": "Fill remaining training settings from the actual CVaR-PPO training script."
+    }
+  },
+  "evaluation_results": {
+    "Round Robin": {
+      "mean_delay": 12.4776,
+      "episode_cvar95": 16.5708,
+      "mean_utilization": 0.9887,
+      "mean_fairness": 1.0,
+      "constraint_satisfaction_percent": 70.0
+    },
+    "PPO": {
+      "mean_delay": 8.5767,
+      "episode_cvar95": 14.8078,
+      "mean_utilization": 0.9891,
+      "mean_fairness": 0.8943,
+      "constraint_satisfaction_percent": 80.0
+    },
+    "CVaR-PPO": {
+      "mean_delay": 4.6530,
+      "episode_cvar95": 6.8296,
+      "mean_utilization": 0.9888,
+      "mean_fairness": 0.4125,
+      "constraint_satisfaction_percent": 100.0
+    },
+    "note": "Observed results from 10-episode evaluations; not evidence of generalization."
+  },
+  "reproducibility": {
+    "python_version": null,
+    "numpy_version": null,
+    "pytorch_version": null,
+    "operating_system": "Windows",
+    "random_seeds_for_training": null,
+    "dependency_file": null,
+    "note": "Record software versions and training seeds for full reproducibility."
+  }
+}
